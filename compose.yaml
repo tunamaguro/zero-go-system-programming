@@ -1,0 +1,9 @@
+services:
+  golang:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - type: bind
+        source: .
+        target: /workspace/golang
