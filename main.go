@@ -1,15 +1,15 @@
 package main
 
 import (
-	"encoding/json"
+	"io"
 	"os"
 )
 
 func main() {
-	encoder := json.NewEncoder(os.Stdout)
-	encoder.SetIndent("", "    ")
-	encoder.Encode(map[string]string{
-		"example": "encoding/json",
-		"hello":   "world",
-	})
+	file, err := os.Create("file.go")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	io.Copy(file, os.Stdin)
 }
