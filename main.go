@@ -1,13 +1,15 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
+	"encoding/json"
+	"os"
 )
 
 func main() {
-	var buffer bytes.Buffer
-	buffer.Write([]byte("bytes.Buffer example \n"))
-	fmt.Println((buffer.String()))
-
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "    ")
+	encoder.Encode(map[string]string{
+		"example": "encoding/json",
+		"hello":   "world",
+	})
 }
