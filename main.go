@@ -1,14 +1,26 @@
 package main
 
 import (
-	"bytes"
+	"archive/zip"
 	"io"
 	"os"
+	"strings"
 )
 
 func main() {
-	reader := bytes.NewBufferString("Example of io.TeeReader\n")
-	teeReader := io.TeeReader(reader, os.Stdout)
-	// データを読み捨てる
-	_, _ = io.ReadAll(teeReader)
+	file, err := os.Create("aaa.zip")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	zipWriter := zip.NewWriter(file)
+	defer zipWriter.Close()
+
+	writer, err := zipWriter.Create("newfile.txt")
+	if err != nil {
+		panic(err)
+	}
+	aaa := "newFile"
+	io.Copy(writer, strings.NewReader(aaa))
+
 }
