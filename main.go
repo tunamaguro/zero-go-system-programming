@@ -1,26 +1,27 @@
 package main
 
 import (
-	"archive/zip"
 	"io"
 	"os"
 	"strings"
 )
 
+var (
+	computer    = strings.NewReader("COMPUTER")
+	system      = strings.NewReader("SYSTEM")
+	programming = strings.NewReader("PROGRAMMING")
+)
+
 func main() {
-	file, err := os.Create("aaa.zip")
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-	zipWriter := zip.NewWriter(file)
-	defer zipWriter.Close()
+	var stream io.Reader
+	// ここに io パッケージを使ったコードを書く
+	aReader := io.NewSectionReader(programming, 5, 1)
+	sReader := io.NewSectionReader(system, 0, 1)
+	cReader := io.NewSectionReader(computer, 0, 1)
+	iReader1 := io.NewSectionReader(programming, 8, 1)
+	iReader2 := io.NewSectionReader(programming, 8, 1)
 
-	writer, err := zipWriter.Create("newfile.txt")
-	if err != nil {
-		panic(err)
-	}
-	aaa := "newFile"
-	io.Copy(writer, strings.NewReader(aaa))
+	stream = io.MultiReader(aReader, sReader, cReader, iReader1, iReader2)
 
+	io.Copy(os.Stdout, stream)
 }
