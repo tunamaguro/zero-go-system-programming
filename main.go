@@ -1,27 +1,37 @@
 package main
 
 import (
-	"io"
-	"os"
-	"strings"
+	"fmt"
+	"math"
+	"time"
 )
 
-var (
-	computer    = strings.NewReader("COMPUTER")
-	system      = strings.NewReader("SYSTEM")
-	programming = strings.NewReader("PROGRAMMING")
-)
-
+func primeNumber() chan int {
+	result := make(chan int)
+	go func() {
+		result <- 2
+		for i := 3; i < 100000; i += 2 {
+			l := int(math.Sqrt(float64(i)))
+			found := false
+			for j := 3; j < l+1; j += 2 {
+				if i%j == 0 {
+					found = true
+					break
+				}
+			}
+			if !found {
+				result <- i
+				time.Sleep(100 * time.Millisecond)
+			}
+		}
+		close(result)
+	}()
+	return result
+}
 func main() {
-	var stream io.Reader
-	// ここに io パッケージを使ったコードを書く
-	aReader := io.NewSectionReader(programming, 5, 1)
-	sReader := io.NewSectionReader(system, 0, 1)
-	cReader := io.NewSectionReader(computer, 0, 1)
-	iReader1 := io.NewSectionReader(programming, 8, 1)
-	iReader2 := io.NewSectionReader(programming, 8, 1)
-
-	stream = io.MultiReader(aReader, sReader, cReader, iReader1, iReader2)
-
-	io.Copy(os.Stdout, stream)
+	pn := primeNumber()
+	// ここがポイント
+	for n := range pn {
+		fmt.Println(n)
+	}
 }
