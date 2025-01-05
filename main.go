@@ -1,15 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"time"
+	"os"
 )
 
 func main() {
-	waitSec := 3
-	fmt.Printf("waiting %d sec\n", waitSec)
-	timer := time.After(time.Duration(waitSec) * time.Second)
-	// 終了を待つ
-	<-timer
-	fmt.Println("timer finished")
+	file, err := os.Create("test.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	file.Write([]byte("system call example\n"))
 }
