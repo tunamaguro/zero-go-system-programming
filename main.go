@@ -2,36 +2,14 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"time"
 )
 
-func primeNumber() chan int {
-	result := make(chan int)
-	go func() {
-		result <- 2
-		for i := 3; i < 100000; i += 2 {
-			l := int(math.Sqrt(float64(i)))
-			found := false
-			for j := 3; j < l+1; j += 2 {
-				if i%j == 0 {
-					found = true
-					break
-				}
-			}
-			if !found {
-				result <- i
-				time.Sleep(100 * time.Millisecond)
-			}
-		}
-		close(result)
-	}()
-	return result
-}
 func main() {
-	pn := primeNumber()
-	// ここがポイント
-	for n := range pn {
-		fmt.Println(n)
-	}
+	waitSec := 3
+	fmt.Printf("waiting %d sec\n", waitSec)
+	timer := time.After(time.Duration(waitSec) * time.Second)
+	// 終了を待つ
+	<-timer
+	fmt.Println("timer finished")
 }
