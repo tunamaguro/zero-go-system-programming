@@ -1,26 +1,53 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"net"
-	"time"
+	"net/http"
+	"net/http/httputil"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
-const interval = 10 * time.Second
-
 func main() {
-	fmt.Println("Start tick server at 224.0.0.1:9999")
-	conn, err := net.Dial("udp", "224.0.0.1:9999")
+	path := filepath.Join(os.TempDir(), "unixdomainsocket-sample")
+	os.Remove(path)
+	listener, err := net.Listen("unix", path)
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close()
-	start := time.Now()
-	wait := start.Truncate(interval).Add(interval).Sub(start)
-	time.Sleep(wait)
-	ticker := time.Tick(interval)
-	for now := range ticker {
-		conn.Write([]byte(now.String()))
-		fmt.Println("Tick: ", now.String())
+	defer listener.Close()
+	fmt.Println("Server is running at " + path)
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			panic(err)
+		}
+		go func() {
+			fmt.Printf("Accept %v\n", conn.RemoteAddr())
+			// リクエストを読み込む
+			request, err := http.ReadRequest(bufio.NewReader(conn))
+			if err != nil {
+				panic(err)
+			}
+			dump, err := httputil.DumpRequest(request, true)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(string(dump))
+			// レスポンスを書き込む
+			response := http.Response{
+				StatusCode: 200,
+				ProtoMajor: 1,
+				ProtoMinor: 0,
+				Body: io.NopCloser(
+					strings.NewReader("Hello World\n")),
+			}
+			response.Write(conn)
+			conn.Close()
+		}()
 	}
 }
