@@ -5,34 +5,21 @@ import (
 	"net"
 )
 
-var text = []string{
-	"aaaa",
-	"bbbb",
-	"cccc",
-}
-
 func main() {
-	conn, err := net.Dial("udp4", "localhost:8888")
+	fmt.Println("Listen tick server at 224.0.0.1:9999")
+	address, err := net.ResolveUDPAddr("udp", "224.0.0.1:9999")
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close()
-	fmt.Println("Sending to server")
-	_, err = conn.Write([]byte("Hello from Client"))
-	if err != nil {
-		panic(err)
-	}
-	for _, t := range text {
-		_, err := conn.Write([]byte(t))
+	listener, err := net.ListenMulticastUDP("udp", nil, address)
+	defer listener.Close()
+	buffer := make([]byte, 1500)
+	for {
+		length, remoteAddress, err := listener.ReadFromUDP(buffer)
 		if err != nil {
 			panic(err)
 		}
+		fmt.Printf("Server %v\n", remoteAddress)
+		fmt.Printf("Now %s\n", string(buffer[:length]))
 	}
-	fmt.Println("Receiving from server")
-	buffer := make([]byte, 1500)
-	length, err := conn.Read(buffer)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Received: %s\n", string(buffer[:length]))
 }
