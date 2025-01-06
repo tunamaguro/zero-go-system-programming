@@ -1,53 +1,34 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"net"
-	"net/http"
-	"net/http/httputil"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 func main() {
-	path := filepath.Join(os.TempDir(), "unixdomainsocket-sample")
+	path := filepath.Join(os.TempDir(), "unixdomainsocket-server")
+	// エラーチェックは削除（存在しなかったらしなかったで問題ないので不要）
 	os.Remove(path)
-	listener, err := net.Listen("unix", path)
+	fmt.Println("Server is running at " + path)
+	conn, err := net.ListenPacket("unixgram", path)
 	if err != nil {
 		panic(err)
 	}
-	defer listener.Close()
-	fmt.Println("Server is running at " + path)
+	defer conn.Close()
+	buffer := make([]byte, 1500)
 	for {
-		conn, err := listener.Accept()
+		length, remoteAddress, err := conn.ReadFrom(buffer)
 		if err != nil {
 			panic(err)
 		}
-		go func() {
-			fmt.Printf("Accept %v\n", conn.RemoteAddr())
-			// リクエストを読み込む
-			request, err := http.ReadRequest(bufio.NewReader(conn))
-			if err != nil {
-				panic(err)
-			}
-			dump, err := httputil.DumpRequest(request, true)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println(string(dump))
-			// レスポンスを書き込む
-			response := http.Response{
-				StatusCode: 200,
-				ProtoMajor: 1,
-				ProtoMinor: 0,
-				Body: io.NopCloser(
-					strings.NewReader("Hello World\n")),
-			}
-			response.Write(conn)
-			conn.Close()
-		}()
+		fmt.Printf("Received from %v: %v\n",
+			remoteAddress, string(buffer[:length]))
+		_, err = conn.WriteTo([]byte("Hello from Server"),
+			remoteAddress)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
