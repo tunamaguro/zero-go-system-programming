@@ -3,10 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"golang.org/x/sys/unix"
 )
 
 func main() {
-	path, _ := os.Executable()
-	fmt.Printf("実行ファイル名: %s\n", os.Args[0])
-	fmt.Printf("実行ファイルパス: %s\n", path)
+	sid, err := unix.Getsid(os.Getpid())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "エラー: %v\n", err)
+		return
+	}
+	fmt.Fprintf(os.Stderr, "グループID: %d セッションID: %d\n",
+		unix.Getpgrp(), sid)
 }
