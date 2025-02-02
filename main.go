@@ -9,14 +9,26 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
-var data = "\033[34m\033[47m\033[4mB\033[31me\n\033[24m\033[30mOS\033[49m\033[m\n"
-
 func main() {
-	var stdOut io.Writer
+	var out io.Writer
 	if isatty.IsTerminal(os.Stdout.Fd()) {
-		stdOut = colorable.NewColorableStdout()
+		out = colorable.NewColorableStdout()
 	} else {
-		stdOut = colorable.NewNonColorable(os.Stdout)
+		out = colorable.NewNonColorable(os.Stdout)
 	}
-	fmt.Fprintln(stdOut, data)
+	if isatty.IsTerminal(os.Stdin.Fd()) {
+		fmt.Fprintln(out, "stdin: terminal")
+	} else {
+		fmt.Println("stdin: pipe")
+	}
+	if isatty.IsTerminal(os.Stdout.Fd()) {
+		fmt.Fprintln(out, "stdout: terminal")
+	} else {
+		fmt.Println("stdout: pipe")
+	}
+	if isatty.IsTerminal(os.Stderr.Fd()) {
+		fmt.Fprintln(out, "stderr: terminal")
+	} else {
+		fmt.Println("stderr: pipe")
+	}
 }
