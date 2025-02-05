@@ -1,34 +1,32 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"os"
+	"os/exec"
 
-	"github.com/mattn/go-colorable"
-	"github.com/mattn/go-isatty"
+	"github.com/creack/pty"
 )
 
 func main() {
-	var out io.Writer
-	if isatty.IsTerminal(os.Stdout.Fd()) {
-		out = colorable.NewColorableStdout()
-	} else {
-		out = colorable.NewNonColorable(os.Stdout)
-	}
-	if isatty.IsTerminal(os.Stdin.Fd()) {
-		fmt.Fprintln(out, "stdin: terminal")
-	} else {
-		fmt.Println("stdin: pipe")
-	}
-	if isatty.IsTerminal(os.Stdout.Fd()) {
-		fmt.Fprintln(out, "stdout: terminal")
-	} else {
-		fmt.Println("stdout: pipe")
-	}
-	if isatty.IsTerminal(os.Stderr.Fd()) {
-		fmt.Fprintln(out, "stderr: terminal")
-	} else {
-		fmt.Println("stderr: pipe")
+	cmd := exec.Command("./check")
+	stdpty, stdtty, _ := pty.Open()
+	// この部分をコメントアウトすると、`check`が出力しない => 疑似端末と判定されていない
+	defer stdtty.Close()
+	cmd.Stdin = stdpty
+	cmd.Stdout = stdpty
+	errpty, errtty, _ := pty.Open()
+	defer errtty.Close()
+	cmd.Stderr = errtty
+	go func() {
+		io.Copy(os.Stdout, stdpty)
+	}()
+	go func() {
+		io.Copy(os.Stderr, errpty)
+	}()
+	//
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
 	}
 }

@@ -3,6 +3,7 @@ module helloworld
 go 1.23.4
 
 require (
+	github.com/creack/pty v1.1.24
 	github.com/edsrzf/mmap-go v1.2.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
